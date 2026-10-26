@@ -1,14 +1,46 @@
-# Pastas de dependências
-node_modules/
-venv/
+# --- Java e Spring Boot ---
+target/
+build/
+*.class
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Logs de execução
+*.log
+logs/
+
+# --- Arquivos de Ambiente e Segredos (MySQL, senhas, etc.) ---
 .env
-__pycache__/
+application-local.properties
+application-local.yml
 
-# Arquivos temporários de IDE e Sistema
+# --- VS Code ---
 .vscode/
-.DS_Store
-Thumbs.db
+*.code-workspace
 
-# Banco local para testes (se for SQLite)
-*.db
-*.sqlite3
+# --- Eclipse / STS / IntelliJ (caso alguém do grupo use outra IDE) ---
+.idea/
+*.iml
+.project
+.classpath
+.settings/
+bin/
+
+# --- Maven / Gradle Wrappers temporários ---
+.mvn/wrapper/maven-wrapper.jar
+.gradle/
+
+# --- Postman e Ferramentas de Teste ---
+# Arquivos de ambiente de teste do Postman com tokens pessoais
+*.postman_environment.json
+
+# --- Sistema Operacional (Windows / Mac) ---
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
