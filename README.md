@@ -1,7 +1,3 @@
-# rack-tracker
-Plataforma integrada de inventário de ativos de TI, mapeamento físico em racks e monitorização de conectividade em tempo real. (Projeto de Software da faculdade - 6º Semestre)
-
-
 # RackTracker
 
 Plataforma integrada desenvolvida para a gestão de inventário, mapeamento físico em armários de bastidor (racks) e monitorização contínua de conectividade de ativos de infraestrutura de TI (switches, servidores e UPS/nobreaks).
