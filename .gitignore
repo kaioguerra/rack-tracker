@@ -1,0 +1,14 @@
+# Pastas de dependências
+node_modules/
+venv/
+.env
+__pycache__/
+
+# Arquivos temporários de IDE e Sistema
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Banco local para testes (se for SQLite)
+*.db
+*.sqlite3
