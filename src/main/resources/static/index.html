@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RackTracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="layout">
+
+    <!-- ===== Menu lateral ===== -->
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-logo">
+                <span></span><span></span><span></span>
+            </div>
+            <div>
+                <strong>RackTracker</strong>
+                <small>Inventário &amp; Monitoramento</small>
+            </div>
+        </div>
+
+        <nav class="menu">
+            <a href="#dashboard" data-pagina="dashboard" class="ativo">
+                <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3zm0 8h8v-6H3zm10 0h8V11h-8zm0-18v6h8V3z"/></svg>
+                Dashboard
+            </a>
+            <a href="#racks" data-pagina="racks">
+                <svg viewBox="0 0 24 24"><path d="M4 2h16a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1zm1 2v4h14V4zm0 6v4h14v-4zm0 6v4h14v-4zm2-10h2v1H7zm0 6h2v1H7zm0 6h2v1H7z"/></svg>
+                Racks
+            </a>
+            <a href="#inventario" data-pagina="inventario">
+                <svg viewBox="0 0 24 24"><path d="M3 5h18v2H3zm0 6h18v2H3zm0 6h18v2H3z"/></svg>
+                Inventário
+            </a>
+            <a href="#auditoria" data-pagina="auditoria">
+                <svg viewBox="0 0 24 24"><path d="M13 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm0 16a7 7 0 1 1 0-14 7 7 0 0 1 0 14zm.5-11H12v6l5 3 .8-1.2-4.3-2.6z"/></svg>
+                Auditoria
+            </a>
+            <a href="#alertas" data-pagina="alertas">
+                <svg viewBox="0 0 24 24"><path d="M12 22a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2zm6-6V11a6 6 0 0 0-5-5.9V4a1 1 0 0 0-2 0v1.1A6 6 0 0 0 6 11v5l-2 2v1h16v-1z"/></svg>
+                Alertas
+                <span class="badge-menu" id="badgeAlertas" hidden>0</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-rodape">
+            <label for="autorGlobal">Operador (autor)</label>
+            <input id="autorGlobal" type="text" placeholder="Seu nome">
+            <small>Usado na trilha de auditoria</small>
+        </div>
+    </aside>
+
+    <!-- ===== Conteúdo ===== -->
+    <main class="conteudo">
+
+        <!-- Aviso de erro de conexão (RF10) -->
+        <div class="faixa-erro" id="faixaErro" hidden>
+            <span>⚠ Não foi possível conectar ao servidor ou ao banco de dados.</span>
+            <button class="btn btn-claro" onclick="location.reload()">Recarregar</button>
+        </div>
+
+        <!-- Faixa de alerta crítico (RF09) -->
+        <div class="faixa-alerta" id="faixaAlerta" hidden>
+            <span class="sirene"></span>
+            <span id="faixaAlertaTexto"></span>
+            <button class="fechar" onclick="fecharFaixaAlerta()" aria-label="Fechar">✕</button>
+        </div>
+
+        <!-- ========== DASHBOARD ========== -->
+        <section class="pagina" id="pagina-dashboard">
+            <header class="topo">
+                <div>
+                    <h1>Dashboard</h1>
+                    <p class="subtitulo">Disponibilidade e ocupação da infraestrutura</p>
+                </div>
+                <button class="btn btn-primario" id="btnPingTodos" onclick="pingarTodos()">
+                    <span class="icone-radar"></span> Testar todos (ping)
+                </button>
+            </header>
+
+            <div class="cards-kpi">
+                <div class="kpi">
+                    <span class="kpi-rotulo">Equipamentos</span>
+                    <strong class="kpi-valor" id="kpiTotal">–</strong>
+                    <span class="kpi-extra" id="kpiManutencao"></span>
+                </div>
+                <div class="kpi kpi-verde">
+                    <span class="kpi-rotulo"><i class="led led-on"></i> Online</span>
+                    <strong class="kpi-valor" id="kpiOnline">–</strong>
+                </div>
+                <div class="kpi kpi-vermelho">
+                    <span class="kpi-rotulo"><i class="led led-off"></i> Offline</span>
+                    <strong class="kpi-valor" id="kpiOffline">–</strong>
+                </div>
+                <div class="kpi kpi-cinza">
+                    <span class="kpi-rotulo"><i class="led led-nt"></i> Não testados</span>
+                    <strong class="kpi-valor" id="kpiNaoTestados">–</strong>
+                </div>
+            </div>
+
+            <div class="grade-dashboard">
+                <div class="painel">
+                    <h2>Ocupação geral</h2>
+                    <div class="anel" id="anelOcupacao" style="--p:0">
+                        <div class="anel-centro">
+                            <strong id="ocupacaoGeral">0%</strong>
+                            <small>das U ocupadas</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="painel">
+                    <h2>Ocupação por rack</h2>
+                    <div id="barrasRacks" class="barras"></div>
+                </div>
+
+                <div class="painel painel-largo">
+                    <h2>Últimos alertas</h2>
+                    <ul id="ultimosAlertas" class="lista-alertas"></ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========== RACKS ========== -->
+        <section class="pagina" id="pagina-racks" hidden>
+            <header class="topo">
+                <div>
+                    <h1>Racks</h1>
+                    <p class="subtitulo">Clique numa posição vazia para alocar, ou num equipamento para ver as ações</p>
+                </div>
+                <button class="btn btn-primario" onclick="abrirModalRack()">+ Novo rack</button>
+            </header>
+
+            <div class="abas-racks" id="abasRacks"></div>
+
+            <div class="area-rack">
+                <div class="rack-moldura">
+                    <div class="rack-topo">
+                        <span id="rackTitulo">—</span>
+                        <span class="rack-vent"></span>
+                    </div>
+                    <div class="rack-corpo">
+                        <div class="rack-numeros" id="rackNumerosEsq"></div>
+                        <div class="rack-slots" id="rackSlots"></div>
+                        <div class="rack-numeros" id="rackNumerosDir"></div>
+                    </div>
+                    <div class="rack-base"><span></span><span></span></div>
+                </div>
+
+                <div class="rack-lateral">
+                    <div class="painel">
+                        <h2 id="infoRackNome">—</h2>
+                        <p class="info-linha"><span>Sala</span><strong id="infoRackSala">—</strong></p>
+                        <p class="info-linha"><span>Capacidade</span><strong id="infoRackCapacidade">—</strong></p>
+                        <p class="info-linha"><span>Ocupado</span><strong id="infoRackOcupado">—</strong></p>
+                        <div class="barra"><div class="barra-preench" id="infoRackBarra"></div></div>
+                        <div class="botoes-linha">
+                            <button class="btn btn-claro" onclick="editarRackAtual()">Editar</button>
+                            <button class="btn btn-perigo-claro" onclick="excluirRackAtual()">Excluir</button>
+                        </div>
+                    </div>
+
+                    <div class="painel">
+                        <h2>Legenda</h2>
+                        <ul class="legenda">
+                            <li><i class="led led-on"></i> Online</li>
+                            <li><i class="led led-off"></i> Offline</li>
+                            <li><i class="led led-nt"></i> Não testado</li>
+                            <li><i class="led led-manut"></i> Em manutenção</li>
+                        </ul>
+                    </div>
+
+                    <div class="painel">
+                        <h2>Sem rack (estoque)</h2>
+                        <ul class="lista-estoque" id="listaEstoque"></ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========== INVENTÁRIO ========== -->
+        <section class="pagina" id="pagina-inventario" hidden>
+            <header class="topo">
+                <div>
+                    <h1>Inventário</h1>
+                    <p class="subtitulo">Consulta de equipamentos com filtros</p>
+                </div>
+                <button class="btn btn-primario" onclick="abrirModalEquipamento()">+ Novo equipamento</button>
+            </header>
+
+            <form class="filtros" id="formFiltros" onsubmit="event.preventDefault(); carregarInventario();">
+                <select id="filtroTipo">
+                    <option value="">Todos os tipos</option>
+                    <option value="SWITCH">Switch</option>
+                    <option value="SERVIDOR">Servidor</option>
+                    <option value="NOBREAK">Nobreak</option>
+                </select>
+                <select id="filtroSala"><option value="">Todas as salas</option></select>
+                <select id="filtroRack"><option value="">Todos os racks</option></select>
+                <input id="filtroIp" type="text" placeholder="Faixa de IP (ex.: 127.0.0.)">
+                <button class="btn btn-primario" type="submit">Filtrar</button>
+                <button class="btn btn-claro" type="button" onclick="limparFiltros()">Limpar</button>
+            </form>
+
+            <div class="painel painel-tabela">
+                <table class="tabela">
+                    <thead>
+                    <tr>
+                        <th>Status</th>
+                        <th>Nome</th>
+                        <th>Tipo</th>
+                        <th>Modelo</th>
+                        <th>Patrimônio</th>
+                        <th>IP</th>
+                        <th>Localização</th>
+                        <th class="col-acoes">Ações</th>
+                    </tr>
+                    </thead>
+                    <tbody id="tabelaInventario"></tbody>
+                </table>
+                <p class="vazio" id="inventarioVazio" hidden>Nenhum equipamento encontrado com esses filtros.</p>
+            </div>
+        </section>
+
+        <!-- ========== AUDITORIA ========== -->
+        <section class="pagina" id="pagina-auditoria" hidden>
+            <header class="topo">
+                <div>
+                    <h1>Trilha de auditoria</h1>
+                    <p class="subtitulo">Registro imutável de alocações, remanejamentos e desalocações</p>
+                </div>
+            </header>
+            <ol class="linha-tempo" id="listaAuditoria"></ol>
+        </section>
+
+        <!-- ========== ALERTAS ========== -->
+        <section class="pagina" id="pagina-alertas" hidden>
+            <header class="topo">
+                <div>
+                    <h1>Alertas</h1>
+                    <p class="subtitulo">Switches e servidores que falharam no ping 2 vezes seguidas</p>
+                </div>
+            </header>
+            <div class="painel">
+                <ul class="lista-alertas lista-alertas-grande" id="listaAlertas"></ul>
+            </div>
+        </section>
+    </main>
+</div>
+
+<!-- Tooltip do rack -->
+<div class="tooltip" id="tooltip" hidden></div>
+
+<!-- Modal genérico (o conteúdo é montado pelo JavaScript) -->
+<div class="modal-fundo" id="modalFundo" hidden onclick="if (event.target === this) fecharModal()">
+    <div class="modal" role="dialog" aria-modal="true">
+        <header class="modal-topo">
+            <h3 id="modalTitulo"></h3>
+            <button class="fechar" onclick="fecharModal()" aria-label="Fechar">✕</button>
+        </header>
+        <div class="modal-corpo" id="modalCorpo"></div>
+    </div>
+</div>
+
+<!-- Notificações rápidas -->
+<div class="toasts" id="toasts"></div>
+
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/dashboard.js"></script>
+<script src="js/racks.js"></script>
+<script src="js/inventario.js"></script>
+<script src="js/auditoria.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
